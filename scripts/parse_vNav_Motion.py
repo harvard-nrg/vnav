@@ -233,7 +233,17 @@ summary = dict()
 
 if args.input_dir:
   args.input_dir = os.path.expanduser(args.input_dir)
-  args.input = [os.path.join(args.input_dir, x) for x in os.listdir(args.input_dir)]
+  args.input = list()
+  for f in os.listdir(args.input_dir):
+    f = os.path.join(args.input_dir, f)
+    # only add valid dicom files from input directory
+    try:
+      with open(f, 'rb') as fo:
+        dicom.filereader.read_preamble(fo, force=False)
+    except dicom.errors.InvalidDicomError:
+      print(f'ignoring invalid dicom {f}')
+      continue
+    args.input.append(f)
 
 if args.input_json:
   args.input_json = os.path.expanduser(args.input_json)
