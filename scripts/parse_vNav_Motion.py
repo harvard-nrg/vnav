@@ -42,23 +42,25 @@ def readRotAndTransFromDicom(paths):
   return quaternions,failed
 
 def readRotAndTransFromJson(js):
-  # get all ImageComments strings from JSON input
-  if isinstance(js, list):
-    comments = [ x['ImageComments'] for x in js[1:] ]
-  elif isinstance(js, dict):
-    comments = js['ImageComments'][1:]
-  else:
-    raise Exception('Invalid type for JSON argument %s', type(js))
+  failure = '^\?_F:'
   pattern = 'R:_(.*?)_(.*?)_(.*?)_(.*?)_T:_(.*?)_(.*?)_(.*?)_F:.'
+  failed = None
   # parse ImageComments and return quaternion values
-  quaternions = [(np.array([1,0,0,0]), np.array([0,0,0]))]
-  for x in comments:
-    m = re.match(pattern, x)
+  quaternions = [(
+    np.array([1,0,0,0]),
+    np.array([0,0,0])
+  )]
+  for i,comment in enumerate(js['ImageComments'][1:]):
+    if re.match(failure, comment):
+      acquisition = js['AcquisitionNumber'][i]
+      failed = (None, acquisition)
+      break
+    m = re.match(pattern, comment)
     rotation = np.array(list(map(float, m.groups(0)[0:4])))
-    translation = list(map(float, m.groups(0)[4:]))
+    translation = np.array(list(map(float, m.groups(0)[4:])))
     quaternions.append((rotation,translation))
 
-  return quaternions
+  return quaternions,failed
 
 def angleAxisToQuaternion(a):
   w = np.cos(a[0] / 2.0)
