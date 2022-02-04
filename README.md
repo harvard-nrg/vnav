@@ -1,3 +1,10 @@
+# Installation
+Just use `pip`
+
+```bash
+pip install vnav
+```
+
 # parse_vNav_Motion.py
 
 This is a small python script to parse the DICOM files from a vNavs series and convert them into an average RMS motion score. The script takes the 
@@ -19,9 +26,3 @@ This script will output a JSON file containing
 5. `MeanMotionScoreRMSPerMin`
 6. `MeanMotionScoreMaxPerMin`
 7. `Failed` which is ether `null` or an array containing the `AquisitionNumber` and `InstanceNumber` where vNav failed.
-
-The script assumes that you've got a version of pydicom installed. For directions on doing that, see https://github.com/pydicom/pydicom
-
-If you find bugs, please report them in the issues section of https://github.com/MRIMotionCorrection/parse_vNav_Motion
-
-If you want to add features, please make a pull request on GitHub as well. We'd love to see this expanded.
