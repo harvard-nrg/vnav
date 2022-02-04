@@ -177,13 +177,13 @@ def diffTransformToMaxMotion(t, radius):
   angle = angleAxis[0]
   axis = angleAxis[1:]
   trans = t[0:3,3].flatten()
-  t_rotmax = radius * np.sqrt(2 - 2 * np.cos(angle))
+  t_rotmax = radius * np.sqrt(2.0 - 2.0 * np.cos(angle))
   return np.sqrt(
-    t_rotmax * t_rotmax +
-    2 * t_rotmax *
+    (t_rotmax * t_rotmax) +
+    (2.0 * t_rotmax) *
       np.linalg.norm(
         trans - (np.dot(trans, axis) * axis)) +
-    np.linalg.norm(trans) * np.linalg.norm(trans)
+    (np.linalg.norm(trans) * np.linalg.norm(trans))
     )
 
 def diffTransformToRMSMotion(t, radius):
