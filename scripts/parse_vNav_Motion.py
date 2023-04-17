@@ -29,8 +29,11 @@ def readRotAndTransFromDicom(paths):
   for x in ds[1:]:
     instance = x.InstanceNumber
     acquisition = x.AcquisitionNumber
-    # check if vNav failed
-    if re.match('^\? F:', x.ImageComments):
+    '''
+    vNav failures do not appear to be encoded consistently. The following regular
+    expression was crafted based on a small number of examples.
+    '''
+    if re.match('^.*\? F:', x.ImageComments):
         print(f'failure detected instance={instance}, acquisition={acquisition}')
         failed = (instance, acquisition)
         break
@@ -42,7 +45,11 @@ def readRotAndTransFromDicom(paths):
   return quaternions,failed
 
 def readRotAndTransFromJson(js):
-  failure = '^\?_F:'
+  '''
+  vNav failures do not appear to be encoded consistently. The following regular
+  expression was crafted based on a small number of examples.
+  '''
+  failure = '^.*\?_F:'
   pattern = 'R:_(.*?)_(.*?)_(.*?)_(.*?)_T:_(.*?)_(.*?)_(.*?)_F:.'
   failed = None
   # parse ImageComments and return quaternion values
