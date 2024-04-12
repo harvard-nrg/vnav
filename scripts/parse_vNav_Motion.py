@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import logging
 import pydicom as dicom
 import os
 import numpy as np
@@ -10,10 +11,16 @@ import json
 import re
 import matplotlib.pyplot as plt
 
+logger = logging.getLogger()
+logging.basicConfig(level=logging.INFO)
+
 def normalize(x):
   return x / np.sqrt(np.dot(x,x))
 
 def readRotAndTransFromDicom(paths):
+  failure = re.compile('^.*\? F:')
+  pattern = re.compile('.*R:\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+T:\s+(.*?)\s+(.*?)\s+(.*?)\s+F:.*')
+
   files = itertools.chain.from_iterable([glob.glob(path) for path in paths])
 
   # Sort DICOMs by AcquisitionNumber (important!)
@@ -33,13 +40,21 @@ def readRotAndTransFromDicom(paths):
     vNav failures do not appear to be encoded consistently. The following regular
     expression was crafted based on a small number of examples.
     '''
-    if re.match('^.*\? F:', x.ImageComments):
-        print(f'failure detected instance={instance}, acquisition={acquisition}')
+    if failure.match(x.ImageComments):
+        logger.error(f'failure detected instance={instance}, acquisition={acquisition}')
         failed = (instance, acquisition)
         break
-    y = str.split(x.ImageComments)
-    rotation = np.array(list(map(float, y[1:5])))
-    translation = np.array(list(map(float, y[6:9])))
+    match = pattern.match(x.ImageComments)
+    if not match:
+        logger.critical(f'instance {instance} ImageComments failed pattern match')
+        logger.critical(x.ImageComments)
+        sys.exit(1)
+    R = match.groups(0)[0:4]
+    T = match.groups(0)[4:]
+    logger.debug(x.ImageComments)
+    logger.debug(f'R={R} and T={T}')
+    rotation = np.array(list(map(float, R)))
+    translation = np.array(list(map(float, T)))
     quaternions.append((rotation, translation))
 
   return quaternions,failed
@@ -232,6 +247,9 @@ parser.add_argument('--output-dir', default='.', help='output directory')
 
 args = parser.parse_args()
 
+if args.verbose:
+    logger.setLevel(logging.DEBUG)
+
 if args.rms is False and args.max is False:
   parser.error('At least one of --rms or --max is required.')
 
@@ -250,7 +268,7 @@ if args.input_dir:
       with open(f, 'rb') as fo:
         dicom.filereader.read_preamble(fo, force=False)
     except dicom.errors.InvalidDicomError:
-      print(f'ignoring invalid dicom {f}')
+      logger.warning(f'ignoring invalid dicom {f}')
       continue
     args.input.append(f)
 
