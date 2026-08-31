@@ -14,8 +14,8 @@ def normalize(x):
   return x / np.sqrt(np.dot(x,x))
 
 def readRotAndTransFromDicom(paths):
-  failure = re.compile('^.*\? F:')
-  pattern = re.compile('.*R:\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+T:\s+(.*?)\s+(.*?)\s+(.*?)\s+F:.*')
+  failure = re.compile(r'^.*\? F:')
+  pattern = re.compile(r'.*R:\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+T:\s+(.*?)\s+(.*?)\s+(.*?)\s+F:.*')
 
   files = itertools.chain.from_iterable([glob.glob(path) for path in paths])
 
@@ -36,7 +36,7 @@ def readRotAndTransFromDicom(paths):
     vNav failures do not appear to be encoded consistently. The following regular
     expression was crafted based on a small number of examples.
     '''
-    if failure.match(x.ImageComments):
+    if 'ImageComments' not in x or failure.match(x.ImageComments):
         logger.error(f'failure detected instance={instance}, acquisition={acquisition}')
         failed = (instance, acquisition)
         break
@@ -60,8 +60,8 @@ def readRotAndTransFromJson(js):
   vNav failures do not appear to be encoded consistently. The following regular
   expression was crafted based on a small number of examples.
   '''
-  failure = '^.*\?_F:'
-  pattern = 'R:_(.*?)_(.*?)_(.*?)_(.*?)_T:_(.*?)_(.*?)_(.*?)_F:.'
+  failure = r'^.*\?_F:'
+  pattern = r'R:_(.*?)_(.*?)_(.*?)_(.*?)_T:_(.*?)_(.*?)_(.*?)_F:.'
   failed = None
   # parse ImageComments and return quaternion values
   quaternions = [(
