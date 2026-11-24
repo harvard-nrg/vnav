@@ -42,9 +42,12 @@ def readRotAndTransFromDicom(paths):
         break
     match = pattern.match(x.ImageComments)
     if not match:
-        logger.critical(f'instance {instance} ImageComments failed pattern match')
-        logger.critical(x.ImageComments)
-        sys.exit(1)
+        logger.error(f'ImageComments from instance={instance}, acquisition={acquisition} failed pattern match')
+        logger.error(x.ImageComments)
+        logger.error(f'treating as vNav failure')
+        failed = (instance, acquisition)
+        break
+
     R = match.groups(0)[0:4]
     T = match.groups(0)[4:]
     logger.debug(x.ImageComments)
